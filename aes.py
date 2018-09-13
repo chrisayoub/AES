@@ -1,6 +1,7 @@
 import argparse
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser(description='Encrypt or decrypt with AES')
     parser.add_argument('--keysize', help='Either 128 or 256 bits.', required=True)
     parser.add_argument('--keyfile', help='The path of a keyfile that fits the specified size.', required=True)
@@ -16,3 +17,7 @@ if __name__ == '__main__':
     mode = args.mode
 
     print(args)
+
+
+if __name__ == '__main__':
+    main()
