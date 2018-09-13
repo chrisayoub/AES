@@ -53,6 +53,19 @@ def main():
 
     print(args)
 
+    for b in bytes_from_file('rand_key_16'):
+        print(b)
+
+# https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
+def bytes_from_file(filename, chunksize=8192):
+    with open(filename, "rb") as f:
+        while True:
+            chunk = f.read(chunksize)
+            if chunk:
+                yield from chunk
+            else:
+                break
+
 
 def sub_bytes_encrypt(byte):
     return bytearray.fromhex(sub_bytes_forward[byte])
