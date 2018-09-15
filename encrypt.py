@@ -19,6 +19,7 @@ sub_bytes_forward = \
 
 L = 4
 schedule = []
+rounds = 10
 
 # https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
 def bytes_from_file(filename, chunksize=8192):
@@ -33,6 +34,12 @@ def bytes_from_file(filename, chunksize=8192):
 
 def encrypt(keysize, keyfile, inputfile, outputfile):
     out = open(outputfile, "w")
+
+    if keysize == 128:
+        rounds = 10
+    elif keysize == 256:
+        rounds = 14
+
     matrix = []
     row = 0
     col = 0
@@ -83,12 +90,30 @@ def write_block(matrix, out):
 
 
 def encrypt_block(matrix):
-    # TODO ENCRYPT
-    return matrix
+    round_key_encrypt(matrix)
+
+    for round in range(rounds - 1):
+        sub_bytes_encrypt(matrix)
+        shift_rows_encrypt(matrix)
+        mix_cols_encrypt(matrix)
+        round_key_encrypt(matrix)
+
+    sub_bytes_encrypt(matrix)
+    shift_rows_encrypt(matrix)
+    round_key_encrypt(matrix)
 
 
-def sub_bytes_encrypt(byte):
-    return bytearray.fromhex(sub_bytes_forward[byte])
+def print_matrix(matrix):
+    for row in matrix:
+        print(row)
+    print()
+
+
+def sub_bytes_encrypt(matrix):
+    for row in matrix:
+        for i in range(L):
+            val = row[i]
+            row[i] = int(sub_bytes_forward[val], 16)
 
 
 def shift_rows_encrypt(matrix):
