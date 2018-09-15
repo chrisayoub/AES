@@ -32,6 +32,7 @@ def bytes_from_file(filename, chunksize=8192):
 
 
 def encrypt(keysize, keyfile, inputfile, outputfile):
+    out = open(outputfile, "w")
     matrix = []
     row = 0
     col = 0
@@ -52,6 +53,7 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
             col = 0
             # Can now encrypt block!
             encrypt_block(matrix)
+            write_block(matrix, out)
 
     # One last partial block left?
     if row != 0 and col != 0:
@@ -66,12 +68,22 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
         matrix[L - 1][L - 1] = pad
         # Now encrypt this last block
         encrypt_block(matrix)
+        write_block(matrix, out)
 
-    print(matrix)
+
+def write_block(matrix, out):
+    col = 0
+    while col < L:
+        row = 0
+        while row < L:
+            val = matrix[row][col]
+            out.write(chr(val))
+            row += 1
+        col += 1
+
 
 def encrypt_block(matrix):
     # TODO ENCRYPT
-    print(matrix)
     return matrix
 
 
