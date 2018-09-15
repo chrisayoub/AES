@@ -1,5 +1,5 @@
 import argparse
-
+import encrypt as e
 
 def main():
     parser = argparse.ArgumentParser(description='Encrypt or decrypt with AES')
@@ -16,18 +16,8 @@ def main():
     outputfile = args.outputfile
     mode = args.mode
 
-
-
-
-# https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
-def bytes_from_file(filename, chunksize=8192):
-    with open(filename, "rb") as f:
-        while True:
-            chunk = f.read(chunksize)
-            if chunk:
-                yield from chunk
-            else:
-                break
+    if mode == 'encrypt':
+        e.encrypt(keyfile, keyfile, inputfile, outputfile)
 
 
 if __name__ == '__main__':

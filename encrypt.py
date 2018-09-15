@@ -18,10 +18,61 @@ sub_bytes_forward = \
 
 
 L = 4
+schedule = []
+
+# https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
+def bytes_from_file(filename, chunksize=8192):
+    with open(filename, "rb") as f:
+        while True:
+            chunk = f.read(chunksize)
+            if chunk:
+                yield from chunk
+            else:
+                break
 
 
 def encrypt(keysize, keyfile, inputfile, outputfile):
+    matrix = []
+    row = 0
+    col = 0
 
+    for b in bytes_from_file(inputfile):
+        if row == 0 and col == 0:
+            matrix = []
+            for i in range(L):
+                matrix.append([])
+        matrix[row].append(b)
+
+        # Move to next spot
+        row += 1
+        if row == L:
+            row = 0
+            col += 1
+        if col == L:
+            col = 0
+            # Can now encrypt block!
+            encrypt_block(matrix)
+
+    # One last partial block left?
+    if row != 0 and col != 0:
+        # Have data left over, pad it!
+        pad = L * L - (col * L + row)
+        while col < L:
+            while row < L:
+                matrix[row].append(0)
+                row += 1
+            row = 0
+            col += 1
+        matrix[L - 1][L - 1] = pad
+        # Now encrypt this last block
+        encrypt_block(matrix)
+
+    print(matrix)
+
+def encrypt_block(matrix):
+    # TODO ENCRYPT
+    print(matrix)
+    return matrix
 
 
 def sub_bytes_encrypt(byte):
@@ -52,9 +103,14 @@ def mix_cols_encrypt(matrix):
         matrix[3][col] = mult_3(s0) ^ s1 ^ s2 ^ mult_2(s3)
 
 
+def round_key_encrypt(matrix, ):
+    N = L / 4
+
+
 def mult_2(x):
     return (x < 1) ^ 27 # 0x1b
 
 
 def mult_3(x):
     return mult_2(x) ^ x
+
