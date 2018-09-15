@@ -16,12 +16,15 @@ sub_bytes_forward = \
  'e1', 'f8', '98', '11', '69', 'd9', '8e', '94', '9b', '1e', '87', 'e9', 'ce', '55', '28', 'df',
  '8c', 'a1', '89', '0d', 'bf', 'e6', '42', '68', '41', '99', '2d', '0f', 'b0', '54', 'bb', '16']
 
+RCON = [1, 2, 4, 8, 16, 32, 64, 128, 27, 54]
+for r in range(len(RCON)):
+    RCON[r] = RCON[r] << 24
 
 L = 4
 schedule = []
 round_key_num = 0
 rounds = 10
-
+ks = 128
 
 # https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
 def bytes_from_file(filename, chunksize=8192):
@@ -48,15 +51,13 @@ def load_keyfile(keyfile):
             val = 0
             count = 0
 
-    for item in schedule:
-        print(hex(item))
-
 
 def encrypt(keysize, keyfile, inputfile, outputfile):
-    global rounds
+    global rounds, ks
 
     out = open(outputfile, "w")
     load_keyfile(keyfile)
+    ks = keysize
 
     if keysize == 128:
         rounds = 10
@@ -113,6 +114,9 @@ def write_block(matrix, out):
 
 
 def encrypt_block(matrix):
+    global round_key_num
+    round_key_num = 0
+
     round_key_encrypt(matrix)
 
     for round in range(rounds - 1):
@@ -163,36 +167,67 @@ def mix_cols_encrypt(matrix):
         matrix[3][col] = mult_3(s0) ^ s1 ^ s2 ^ mult_2(s3)
 
 
+def sub_word(word):
+    a0 = (0x000000ff & word)
+    a1 = (0x0000ff00 & word) >> 8
+    a2 = (0x00ff0000 & word) >> 16
+    a3 = (0xff000000 & word) >> 24
+
+    a0 = int(sub_bytes_forward[a0], 16)
+    a1 = int(sub_bytes_forward[a1], 16)
+    a2 = int(sub_bytes_forward[a2], 16)
+    a3 = int(sub_bytes_forward[a3], 16)
+
+    return (a3 << 24) | (a2 << 16) | (a1 << 8) | a0
+
+
+def rot_word(word):
+    a0 = (0x000000ff & word)
+    a1 = (0x0000ff00 & word) >> 8
+    a2 = (0x00ff0000 & word) >> 16
+    a3 = (0xff000000 & word) >> 24
+
+    return (a2 << 24) | (a1 << 16) | (a0 << 8) | a3
+
+
 def get_new_key():
     global schedule
 
     i = len(schedule)
 
+    k = 4
+    if ks == 256:
+        k = 8
+
     temp = schedule[i - 1]
-#     if (i mod Nk = 0)
-#         temp = SubWord(RotWord(temp))
-#         xor
-#         Rcon[i / Nk]
-#     else if (Nk > 6 and i mod Nk = 4)
-#     temp = SubWord(temp)
-#
-#
-# end if
-# w[i] = w[i - Nk]
-# xor
-# temp
-#
+    if i % k == 0:
+        temp = sub_word(rot_word(temp)) ^ RCON[int(i / k) - 1]
+    elif k > 6 and i % k == 4:
+        temp = sub_word(temp)
+    schedule.append(schedule[i - k] ^ temp)
+
 
 def round_key_encrypt(matrix):
     global round_key_num, schedule
 
-    if round_key_num >= len(schedule):
-        get_new_key()
+    col = 0
+    for row in range(L):
+        if round_key_num >= len(schedule):
+            get_new_key()
+        key = schedule[round_key_num]
 
-    key = schedule[round_key_num]
+        a0 = (0x000000ff & key)
+        a1 = (0x0000ff00 & key) >> 8
+        a2 = (0x00ff0000 & key) >> 16
+        a3 = (0xff000000 & key) >> 24
 
+        matrix[0][col] = matrix[0][col] ^ a0
+        matrix[1][col] = matrix[1][col] ^ a1
+        matrix[2][col] = matrix[2][col] ^ a2
+        matrix[3][col] = matrix[3][col] ^ a3
 
-    round_key_num += 1
+        col += 1
+        round_key_num += 1
 
 
 def mult_2(x):
@@ -201,4 +236,3 @@ def mult_2(x):
 
 def mult_3(x):
     return mult_2(x) ^ x
-
