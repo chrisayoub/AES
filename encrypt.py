@@ -114,25 +114,45 @@ def write_block(matrix, out):
 
 
 def encrypt_block(matrix):
+    print_matrix(matrix)
+
     global round_key_num
     round_key_num = 0
 
     round_key_encrypt(matrix)
+    print_matrix(matrix)
 
     for round in range(rounds - 1):
         sub_bytes_encrypt(matrix)
+        print('sub bytes')
+        print_matrix(matrix)
+
         shift_rows_encrypt(matrix)
+        print('shift rows')
+        print_matrix(matrix)
+
         mix_cols_encrypt(matrix)
+        print('mix cols')
+        print_matrix(matrix)
+
         round_key_encrypt(matrix)
+        print('round key')
+        print_matrix(matrix)
 
     sub_bytes_encrypt(matrix)
+    print_matrix(matrix)
     shift_rows_encrypt(matrix)
+    print_matrix(matrix)
     round_key_encrypt(matrix)
+
+    print_matrix(matrix)
 
 
 def print_matrix(matrix):
     for row in matrix:
-        print(row)
+        for val in row:
+            print(hex(val), end=', ')
+        print()
     print()
 
 
@@ -216,10 +236,10 @@ def round_key_encrypt(matrix):
             get_new_key()
         key = schedule[round_key_num]
 
-        a0 = (0x000000ff & key)
-        a1 = (0x0000ff00 & key) >> 8
-        a2 = (0x00ff0000 & key) >> 16
-        a3 = (0xff000000 & key) >> 24
+        a3 = (0x000000ff & key)
+        a2 = (0x0000ff00 & key) >> 8
+        a1 = (0x00ff0000 & key) >> 16
+        a0 = (0xff000000 & key) >> 24
 
         matrix[0][col] = matrix[0][col] ^ a0
         matrix[1][col] = matrix[1][col] ^ a1
