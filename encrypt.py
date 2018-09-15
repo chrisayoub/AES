@@ -19,7 +19,9 @@ sub_bytes_forward = \
 
 L = 4
 schedule = []
+round_key_num = 0
 rounds = 10
+
 
 # https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
 def bytes_from_file(filename, chunksize=8192):
@@ -32,8 +34,29 @@ def bytes_from_file(filename, chunksize=8192):
                 break
 
 
+def load_keyfile(keyfile):
+    global schedule
+
+    val = 0
+    count = 0
+    for b in bytes_from_file(keyfile):
+        val = val << 8 | int(b)
+
+        count += 1
+        if count == L:
+            schedule.append(val)
+            val = 0
+            count = 0
+
+    for item in schedule:
+        print(hex(item))
+
+
 def encrypt(keysize, keyfile, inputfile, outputfile):
+    global rounds
+
     out = open(outputfile, "w")
+    load_keyfile(keyfile)
 
     if keysize == 128:
         rounds = 10
@@ -140,8 +163,36 @@ def mix_cols_encrypt(matrix):
         matrix[3][col] = mult_3(s0) ^ s1 ^ s2 ^ mult_2(s3)
 
 
-def round_key_encrypt(matrix, ):
-    N = L / 4
+def get_new_key():
+    global schedule
+
+    i = len(schedule)
+
+    temp = schedule[i - 1]
+#     if (i mod Nk = 0)
+#         temp = SubWord(RotWord(temp))
+#         xor
+#         Rcon[i / Nk]
+#     else if (Nk > 6 and i mod Nk = 4)
+#     temp = SubWord(temp)
+#
+#
+# end if
+# w[i] = w[i - Nk]
+# xor
+# temp
+#
+
+def round_key_encrypt(matrix):
+    global round_key_num, schedule
+
+    if round_key_num >= len(schedule):
+        get_new_key()
+
+    key = schedule[round_key_num]
+
+
+    round_key_num += 1
 
 
 def mult_2(x):
