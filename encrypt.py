@@ -56,7 +56,7 @@ def load_keyfile(keyfile):
 def encrypt(keysize, keyfile, inputfile, outputfile):
     global rounds, ks
 
-    out = open(outputfile, "w")
+    out = open(outputfile, 'wb')
     load_keyfile(keyfile)
     ks = keysize
 
@@ -104,14 +104,17 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
 
 
 def write_block(matrix, out):
+    result = []
+
     col = 0
     while col < L:
         row = 0
         while row < L:
-            val = matrix[row][col]
-            out.write(chr(val))
+            result.append(matrix[row][col])
             row += 1
         col += 1
+
+    out.write(bytes(result))
 
 
 def encrypt_block(matrix):
@@ -127,8 +130,6 @@ def encrypt_block(matrix):
     sub_bytes_encrypt(matrix)
     shift_rows_encrypt(matrix)
     round_key_encrypt(matrix)
-
-    print_matrix(matrix)
 
 
 def print_matrix(matrix):
