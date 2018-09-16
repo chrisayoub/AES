@@ -196,7 +196,7 @@ def rot_word(word):
 
 
 def get_new_key():
-    global schedule
+    global schedule, ks
 
     i = len(schedule)
 

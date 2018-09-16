@@ -10,14 +10,14 @@ def main():
     parser.add_argument('--mode', help='encrypt or decrypt', required=True)
 
     args = parser.parse_args()
-    keysize = args.keysize
+    keysize = int(args.keysize)
     keyfile = args.keyfile
     inputfile = args.inputfile
     outputfile = args.outputfile
     mode = args.mode
 
     if mode == 'encrypt':
-        e.encrypt(keyfile, keyfile, inputfile, outputfile)
+        e.encrypt(keysize, keyfile, inputfile, outputfile)
 
 
 if __name__ == '__main__':
