@@ -114,35 +114,17 @@ def write_block(matrix, out):
 
 
 def encrypt_block(matrix):
-    print_matrix(matrix)
-
     global round_key_num
     round_key_num = 0
 
     round_key_encrypt(matrix)
-    print_matrix(matrix)
-
     for round in range(rounds - 1):
         sub_bytes_encrypt(matrix)
-        print('sub bytes')
-        print_matrix(matrix)
-
         shift_rows_encrypt(matrix)
-        print('shift rows')
-        print_matrix(matrix)
-
         mix_cols_encrypt(matrix)
-        print('mix cols')
-        print_matrix(matrix)
-
         round_key_encrypt(matrix)
-        print('round key')
-        print_matrix(matrix)
-
     sub_bytes_encrypt(matrix)
-    print_matrix(matrix)
     shift_rows_encrypt(matrix)
-    print_matrix(matrix)
     round_key_encrypt(matrix)
 
     print_matrix(matrix)
@@ -176,16 +158,19 @@ def shift_rows_encrypt(matrix):
 def mix_cols_encrypt(matrix):
     for col in range(L):
         # Old values
-        s0 = matrix[0][col]
-        s1 = matrix[1][col]
-        s2 = matrix[2][col]
-        s3 = matrix[3][col]
-        # New values
-        matrix[0][col] = mult_2(s0) ^ mult_3(s1) ^ s2 ^ s3
-        matrix[1][col] = s0 ^ mult_2(s1) ^ mult_3(s2) ^ s3
-        matrix[2][col] = s0 ^ s1 ^ mult_2(s2) ^ mult_3(s3)
-        matrix[3][col] = mult_3(s0) ^ s1 ^ s2 ^ mult_2(s3)
+        old = [matrix[j][col] for j in range(L)]
+        mult = [] # Used for 2 and 3 times
+        for val in old:
+            mod = val << 1 & 0xff
+            if 0x80 & val:
+                mod = mod ^ 0x1b
+            mult.append(mod)
 
+        # New values
+        matrix[0][col] = mult[0] ^ old[3] ^ old[2] ^ mult[1] ^ old[1]
+        matrix[1][col] = mult[1] ^ old[0] ^ old[3] ^ mult[2] ^ old[2]
+        matrix[2][col] = mult[2] ^ old[1] ^ old[0] ^ mult[3] ^ old[3]
+        matrix[3][col] = mult[3] ^ old[2] ^ old[1] ^ mult[0] ^ old[0]
 
 def sub_word(word):
     a0 = (0x000000ff & word)
@@ -248,11 +233,3 @@ def round_key_encrypt(matrix):
 
         col += 1
         round_key_num += 1
-
-
-def mult_2(x):
-    return (x < 1) ^ 27 # 0x1b
-
-
-def mult_3(x):
-    return mult_2(x) ^ x
