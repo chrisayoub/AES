@@ -69,5 +69,5 @@ The keyfile gives us the initial keys in the schedule. Then, we use
 various opeartions to generate subsequent keys in the sequence:
 + `sub_word` (Uses the `sub_bytes` lookup table to map the bytes of the key)
 + `rot_word` (Rotates the 32-bit key word)
-+ `rcon` (Uses a defined constant for a XOR opeartion)
++ `rcon` (Uses a defined constant for a XOR operation based on current round)
 
