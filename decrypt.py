@@ -1,20 +1,6 @@
-sub_bytes_backward = \
-    ['52', '09', '6a', 'd5', '30', '36', 'a5', '38', 'bf', '40', 'a3', '9e', '81', 'f3', 'd7', 'fb',
-     '7c', 'e3', '39', '82', '9b', '2f', 'ff', '87', '34', '8e', '43', '44', 'c4', 'de', 'e9', 'cb',
-     '54', '7b', '94', '32', 'a6', 'c2', '23', '3d', 'ee', '4c', '95', '0b', '42', 'fa', 'c3', '4e',
-     '08', '2e', 'a1', '66', '28', 'd9', '24', 'b2', '76', '5b', 'a2', '49', '6d', '8b', 'd1', '25',
-     '72', 'f8', 'f6', '64', '86', '68', '98', '16', 'd4', 'a4', '5c', 'cc', '5d', '65', 'b6', '92',
-     '6c', '70', '48', '50', 'fd', 'ed', 'b9', 'da', '5e', '15', '46', '57', 'a7', '8d', '9d', '84',
-     '90', 'd8', 'ab', '00', '8c', 'bc', 'd3', '0a', 'f7', 'e4', '58', '05', 'b8', 'b3', '45', '06',
-     'd0', '2c', '1e', '8f', 'ca', '3f', '0f', '02', 'c1', 'af', 'bd', '03', '01', '13', '8a', '6b',
-     '3a', '91', '11', '41', '4f', '67', 'dc', 'ea', '97', 'f2', 'cf', 'ce', 'f0', 'b4', 'e6', '73',
-     '96', 'ac', '74', '22', 'e7', 'ad', '35', '85', 'e2', 'f9', '37', 'e8', '1c', '75', 'df', '6e',
-     '47', 'f1', '1a', '71', '1d', '29', 'c5', '89', '6f', 'b7', '62', '0e', 'aa', '18', 'be', '1b',
-     'fc', '56', '3e', '4b', 'c6', 'd2', '79', '20', '9a', 'db', 'c0', 'fe', '78', 'cd', '5a', 'f4',
-     '1f', 'dd', 'a8', '33', '88', '07', 'c7', '31', 'b1', '12', '10', '59', '27', '80', 'ec', '5f',
-     '60', '51', '7f', 'a9', '19', 'b5', '4a', '0d', '2d', 'e5', '7a', '9f', '93', 'c9', '9c', 'ef',
-     'a0', 'e0', '3b', '4d', 'ae', '2a', 'f5', 'b0', 'c8', 'eb', 'bb', '3c', '83', '53', '99', '61',
-     '17', '2b', '04', '7e', 'ba', '77', 'd6', '26', 'e1', '69', '14', '63', '55', '21', '0c', '7d']
+import sub_bytes as sb
+import round_key
+import read_bytes as rb
 
 mul9 = [
     0x00, 0x09, 0x12, 0x1b, 0x24, 0x2d, 0x36, 0x3f, 0x48, 0x41, 0x5a, 0x53, 0x6c, 0x65, 0x7e, 0x77,
@@ -92,50 +78,15 @@ mul14 = [
     0xd7, 0xd9, 0xcb, 0xc5, 0xef, 0xe1, 0xf3, 0xfd, 0xa7, 0xa9, 0xbb, 0xb5, 0x9f, 0x91, 0x83, 0x8d,
 ]
 
-
-RCON = [1, 2, 4, 8, 16, 32, 64, 128, 27, 54]
-for r in range(len(RCON)):
-    RCON[r] = RCON[r] << 24
-
 L = 4
-schedule = []
-round_key_num = 0
 rounds = 10
-ks = 128
-
-
-# https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte
-def bytes_from_file(filename, chunksize=8192):
-    with open(filename, "rb") as f:
-        while True:
-            chunk = f.read(chunksize)
-            if chunk:
-                yield from chunk
-            else:
-                break
-
-
-def load_keyfile(keyfile):
-    global schedule
-
-    val = 0
-    count = 0
-    for b in bytes_from_file(keyfile):
-        val = val << 8 | int(b)
-
-        count += 1
-        if count == L:
-            schedule.append(val)
-            val = 0
-            count = 0
 
 
 def encrypt(keysize, keyfile, inputfile, outputfile):
-    global rounds, ks
+    global rounds
 
     out = open(outputfile, 'wb')
-    load_keyfile(keyfile)
-    ks = keysize
+    rk = round_key.Round(keyfile=keyfile, keysize=keysize)
 
     if keysize == 128:
         rounds = 10
@@ -146,7 +97,7 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
     row = 0
     col = 0
 
-    for b in bytes_from_file(inputfile):
+    for b in rb.bytes_from_file(inputfile):
         if row == 0 and col == 0:
             matrix = []
             for i in range(L):
@@ -160,23 +111,10 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
             col += 1
         if col == L:
             col = 0
-            # Can now encrypt block!
-            encrypt_block(matrix)
+            # Can now decrypt block!
+            decrypt_block(matrix, rk)
+            # TODO DONT WRITE PADDING
             write_block(matrix, out)
-
-    # One last partial block left?
-    # Get the padding TODO
-    pad = matrix[L - 1][L - 1]
-    while col < L:
-        while row < L:
-            matrix[row].append(0)
-            row += 1
-        row = 0
-        col += 1
-    matrix[L - 1][L - 1] = pad
-    # Now encrypt this last block
-    encrypt_block(matrix)
-    write_block(matrix, out)
 
 
 def write_block(matrix, out):
@@ -193,34 +131,25 @@ def write_block(matrix, out):
     out.write(bytes(result))
 
 
-def decrypt_block(matrix):
-    global round_key_num
-    round_key_num = 0
+def decrypt_block(matrix, r):
+    r.reset()
 
-    round_key_encrypt(matrix)
+    r.round_key_encrypt(matrix)
     for i in range(rounds - 1):
-        sub_bytes_encrypt(matrix)
-        shift_rows_encrypt(matrix)
-        mix_cols_encrypt(matrix)
-        round_key_encrypt(matrix)
-    sub_bytes_encrypt(matrix)
-    shift_rows_encrypt(matrix)
-    round_key_encrypt(matrix)
-
-
-def print_matrix(matrix):
-    for row in matrix:
-        for val in row:
-            print(hex(val), end=', ')
-        print()
-    print()
+        shift_rows_decrypt(matrix)
+        sub_bytes_decrypt(matrix)
+        r.round_key_encrypt(matrix)
+        mix_cols_decrypt(matrix)
+    shift_rows_decrypt(matrix)
+    sub_bytes_decrypt(matrix)
+    r.round_key_encrypt(matrix)
 
 
 def sub_bytes_decrypt(matrix):
     for row in matrix:
         for i in range(L):
             val = row[i]
-            row[i] = int(sub_bytes_backward[val], 16)
+            row[i] = sb.sub_bytes_dec(val)
 
 
 def shift_rows_decrypt(matrix):
@@ -233,78 +162,14 @@ def shift_rows_decrypt(matrix):
             matrix[row][0] = temp
 
 
-def mix_cols_encrypt(matrix):
+def mix_cols_decrypt(matrix):
     for col in range(L):
         # Old values
         old = [matrix[j][col] for j in range(L)]
 
         # New values
-        matrix[0][col] = mul2[old[0]] ^ mul3[old[1]] ^ old[2] ^ old[3]
-        matrix[1][col] = old[0] ^ mul2[old[1]] ^ mul3[old[2]] ^ old[3]
-        matrix[2][col] = old[0] ^ old[1] ^ mul2[old[2]] ^ mul3[old[3]]
-        matrix[3][col] = mul3[old[0]] ^ old[1] ^ old[2] ^ mul2[old[3]]
+        matrix[0][col] = mul14[old[0]] ^ mul11[old[1]] ^ mul13[old[2]] ^ mul9[old[3]]
+        matrix[1][col] = mul9[old[0]] ^ mul14[old[1]] ^ mul11[old[2]] ^ mul13[old[3]]
+        matrix[2][col] = mul13[old[0]] ^ mul9[old[1]] ^ mul14[old[2]] ^ mul11[old[3]]
+        matrix[3][col] = mul11[old[0]] ^ mul13[old[1]] ^ mul9[old[2]] ^ mul14[old[3]]
 
-
-# ROUND KEY MOVE TO ITS OWN FILE
-
-def sub_word(word):
-    a0 = (0x000000ff & word)
-    a1 = (0x0000ff00 & word) >> 8
-    a2 = (0x00ff0000 & word) >> 16
-    a3 = (0xff000000 & word) >> 24
-
-    a0 = int(sub_bytes_forward[a0], 16)
-    a1 = int(sub_bytes_forward[a1], 16)
-    a2 = int(sub_bytes_forward[a2], 16)
-    a3 = int(sub_bytes_forward[a3], 16)
-
-    return (a3 << 24) | (a2 << 16) | (a1 << 8) | a0
-
-
-def rot_word(word):
-    a0 = (0x000000ff & word)
-    a1 = (0x0000ff00 & word) >> 8
-    a2 = (0x00ff0000 & word) >> 16
-    a3 = (0xff000000 & word) >> 24
-
-    return (a2 << 24) | (a1 << 16) | (a0 << 8) | a3
-
-
-def get_new_key():
-    global schedule, ks
-
-    i = len(schedule)
-
-    k = 4
-    if ks == 256:
-        k = 8
-
-    temp = schedule[i - 1]
-    if i % k == 0:
-        temp = sub_word(rot_word(temp)) ^ RCON[int(i / k) - 1]
-    elif k > 6 and i % k == 4:
-        temp = sub_word(temp)
-    schedule.append(schedule[i - k] ^ temp)
-
-
-def round_key_encrypt(matrix):
-    global round_key_num, schedule
-
-    col = 0
-    for row in range(L):
-        if round_key_num >= len(schedule):
-            get_new_key()
-        key = schedule[round_key_num]
-
-        a3 = (0x000000ff & key)
-        a2 = (0x0000ff00 & key) >> 8
-        a1 = (0x00ff0000 & key) >> 16
-        a0 = (0xff000000 & key) >> 24
-
-        matrix[0][col] = matrix[0][col] ^ a0
-        matrix[1][col] = matrix[1][col] ^ a1
-        matrix[2][col] = matrix[2][col] ^ a2
-        matrix[3][col] = matrix[3][col] ^ a3
-
-        col += 1
-        round_key_num += 1
