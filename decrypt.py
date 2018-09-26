@@ -217,6 +217,14 @@ def write_block_no_pad(matrix, out):
     out.write(bytes(result))
 
 
+def print_matrix(matrix):
+    for row in matrix:
+        for v in row:
+            print(hex(v), end=' ')
+        print()
+    print()
+
+
 def decrypt_block(matrix, r):
     r.reset()
 
@@ -243,7 +251,7 @@ def shift_rows_decrypt(matrix):
         for shifts in range(row):
             # Do a shift
             temp = matrix[row][3]
-            for k in range(1, L):
+            for k in range(L - 1, 0, -1):
                 matrix[row][k] = matrix[row][k - 1]
             matrix[row][0] = temp
 

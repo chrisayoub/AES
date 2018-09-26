@@ -1,5 +1,6 @@
 import argparse
 import encrypt as e
+import decrypt as d
 
 
 def main():
@@ -26,6 +27,8 @@ def main():
 
     if mode == 'encrypt':
         e.encrypt(keysize, keyfile, inputfile, outputfile)
+    elif mode == 'decrypt':
+        d.decrypt(keysize, keyfile, inputfile, outputfile)
 
 
 if __name__ == '__main__':
