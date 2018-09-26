@@ -75,3 +75,33 @@ various opeartions to generate subsequent keys in the sequence:
 + `rot_word` (Rotates the 32-bit key word)
 + `rcon` (Uses a defined constant for a XOR operation based on current round)
 
+#### Decryption
+
+The procedures that make up the inverse cipher algorithm:
++ `inv_sub_bytes`
++ `inv_shift_rows`
++ `inv_mix_cols`
++ `round_key`
+
+Like in encryption, most of the rounds involves each of these steps, 
+but there are exceptions for the beginning and at the end. These
+steps are run for a certain number of rounds, based on the keysize.
+
+##### InvSubBytes
+
+SubBytes, but with a different S-Box matrix.
+
+##### InvShiftRows
+
+We simply shift the rows right instead of left circularly.
+
+##### InvMixCols
+
+We do a matrix multiplication by a different set of constants.
+The lookup tables posted to Piazza were super useful for this.
+
+##### RoundKey
+
+RoundKey functions the same as in encryption, but we simply choose 
+a different index of key from within the generated schedule to apply
+to the matrix. This works because it is a XOR operation.
