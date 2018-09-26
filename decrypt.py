@@ -99,6 +99,10 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
 
     for b in rb.bytes_from_file(inputfile):
         if row == 0 and col == 0:
+            # Write the block
+            if matrix:
+                write_block(matrix, out)
+
             matrix = []
             for i in range(L):
                 matrix.append([])
@@ -113,8 +117,10 @@ def encrypt(keysize, keyfile, inputfile, outputfile):
             col = 0
             # Can now decrypt block!
             decrypt_block(matrix, rk)
-            # TODO DONT WRITE PADDING
-            write_block(matrix, out)
+
+    # We have one last block to remove padding and write
+    write_block_no_pad(matrix, out)
+
 
 
 def write_block(matrix, out):
@@ -125,6 +131,23 @@ def write_block(matrix, out):
         row = 0
         while row < L:
             result.append(matrix[row][col])
+            row += 1
+        col += 1
+
+    out.write(bytes(result))
+
+
+def write_block_no_pad(matrix, out):
+    pad = L * L - (matrix[L - 1][L - 1])
+    i = 0
+    result = []
+
+    col = 0
+    while col < L and i < pad:
+        row = 0
+        while row < L and i < pad:
+            result.append(matrix[row][col])
+            i += 1
             row += 1
         col += 1
 
