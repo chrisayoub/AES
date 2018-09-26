@@ -226,17 +226,17 @@ def print_matrix(matrix):
 
 
 def decrypt_block(matrix, r):
-    r.reset()
+    r.reset_decrypt()
 
-    r.round_key_encrypt(matrix)
+    r.round_key_decrypt(matrix)
     for i in range(rounds - 1):
         shift_rows_decrypt(matrix)
         sub_bytes_decrypt(matrix)
-        r.round_key_encrypt(matrix)
+        r.round_key_decrypt(matrix)
         mix_cols_decrypt(matrix)
     shift_rows_decrypt(matrix)
     sub_bytes_decrypt(matrix)
-    r.round_key_encrypt(matrix)
+    r.round_key_decrypt(matrix)
 
 
 def sub_bytes_decrypt(matrix):

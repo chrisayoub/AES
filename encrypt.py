@@ -143,7 +143,7 @@ def write_block(matrix, out):
 
 
 def encrypt_block(matrix, r):
-    r.reset()
+    r.reset_encrypt()
 
     r.round_key_encrypt(matrix)
     for i in range(rounds - 1):

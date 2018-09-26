@@ -19,6 +19,13 @@ class Round:
         self.ks = keysize
         self.round_key_num = 0
 
+        # Fill with the keys
+        num_keys = self.get_max_keys() - len(self.schedule)
+        i = 0
+        while i < num_keys:
+            self.get_new_key()
+            i += 1
+
     def load_keyfile(self, keyfile):
         val = 0
         count = 0
@@ -68,10 +75,16 @@ class Round:
         self.schedule.append(self.schedule[i - k] ^ temp)
 
     def round_key_encrypt(self, matrix):
+        self.apply_key(matrix)
+
+    def round_key_decrypt(self, matrix):
+        self.round_key_num = self.round_key_num - self.L + 1
+        self.apply_key(matrix)
+        self.round_key_num = self.round_key_num - self.L - 1
+
+    def apply_key(self, matrix):
         col = 0
         for row in range(self.L):
-            if self.round_key_num >= len(self.schedule):
-                self.get_new_key()
             key = self.schedule[self.round_key_num]
 
             a3 = (0x000000ff & key)
@@ -87,5 +100,14 @@ class Round:
             col += 1
             self.round_key_num += 1
 
-    def reset(self):
+    def get_max_keys(self):
+        if self.ks == 128:
+            return 44
+        else:
+            return 60
+
+    def reset_decrypt(self):
+        self.round_key_num = self.get_max_keys() - 1
+
+    def reset_encrypt(self):
         self.round_key_num = 0
