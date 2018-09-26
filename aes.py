@@ -1,13 +1,21 @@
 import argparse
 import encrypt as e
 
+
 def main():
     parser = argparse.ArgumentParser(description='Encrypt or decrypt with AES')
-    parser.add_argument('--keysize', help='Either 128 or 256 bits.', required=True)
-    parser.add_argument('--keyfile', help='The path of a keyfile that fits the specified size.', required=True)
-    parser.add_argument('--inputfile', help='The file to encrypt or decrypt.', required=True)
-    parser.add_argument('--outputfile', help='The path for the desired output file.', required=True)
-    parser.add_argument('--mode', help='encrypt or decrypt', required=True)
+    parser.add_argument('--keysize',
+                        help='Either 128 or 256 bits.', required=True)
+    parser.add_argument('--keyfile',
+                        help='The path of a keyfile that fits the keysize.',
+                        required=True)
+    parser.add_argument('--inputfile',
+                        help='The file to encrypt or decrypt.', required=True)
+    parser.add_argument('--outputfile',
+                        help='The path for the desired output file.',
+                        required=True)
+    parser.add_argument('--mode',
+                        help='encrypt or decrypt', required=True)
 
     args = parser.parse_args()
     keysize = int(args.keysize)

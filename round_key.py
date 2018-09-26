@@ -61,7 +61,8 @@ class Round:
 
         temp = self.schedule[i - 1]
         if i % k == 0:
-            temp = self.sub_word(self.rot_word(temp)) ^ self.RCON[int(i / k) - 1]
+            temp = self.sub_word(self.rot_word(temp)) \
+                   ^ self.RCON[int(i / k) - 1]
         elif k > 6 and i % k == 4:
             temp = self.sub_word(temp)
         self.schedule.append(self.schedule[i - k] ^ temp)
