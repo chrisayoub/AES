@@ -19,6 +19,9 @@ The size of `$KEYFILE` in bits should match the specified `$KEYSIZE`
 `aes.py` uses `argparse` from the Python standard library to parse
 the command line arguments, and then calls either `encrypt.py`
 or `decrypt.py` to do the actual work.
++ `read_bytes.py` contains a function to help read a file as bytes
++ `round_key.py` encapsulates the round key schedule generation
++ `sub_bytes.py` encapsulates the arrays used for SubBytes routines
 
 #### Encryption
 
@@ -63,8 +66,8 @@ but it all basically simplifies down to mostly XOR bitwise operations.
 Each column of the block is XOR'd with a value generated from
 the key file in a process called generating the *key schedule*.
 There will be a constant number of keys generated based on the
-key size used, and the code generates these dynamically as they are
-required (rather than generating them all immediately).
+key size used, and the code generates these all immediately so
+they are available for use.
 
 The keyfile gives us the initial keys in the schedule. Then, we use
 various opeartions to generate subsequent keys in the sequence:
