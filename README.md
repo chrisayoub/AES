@@ -3,8 +3,6 @@
 Student information:
 ```
 Christopher Ayoub
-chrisayoub@utexas.edu
-EID cfa348
 ```
 
 ### Usage 
